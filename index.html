@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Currency Converter</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="converter">
+        <h2>VND to USD Converter</h2>
+        <input type="text" id="vndInput" placeholder="Enter amount in VND" oninput="convertToUSD()">
+        <p>USD: <span id="usdOutput">$0.00</span></p>
+
+        <h2>USD to VND Converter</h2>
+        <input type="text" id="usdInput" placeholder="Enter amount in USD" oninput="convertToVND()">
+        <p>VND: <span id="vndOutput">₫0</span></p>
+    </div>
+
+    <script>
+        async function fetchExchangeRate() {
+            try {
+                const response = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
+                const data = await response.json();
+                return data.rates;
+            } catch (error) {
+                console.error('Failed to fetch exchange rates:', error);
+                return null;
+            }
+        }
+
+        function formatNumberWithCommas(number) {
+            return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        }
+
+        async function convertToUSD() {
+            let vndAmount = parseFloat(document.getElementById('vndInput').value.replace(/,/g, ''));
+            let rates = await fetchExchangeRate();
+            
+            if (!isNaN(vndAmount) && vndAmount >= 0 && rates !== null && rates.VND) {
+                let usdAmount = vndAmount * (1 / rates.VND);
+                document.getElementById('usdOutput').textContent = `$${formatNumberWithCommas(usdAmount.toFixed(2))}`;
+            } else {
+                document.getElementById('usdOutput').textContent = '$0.00';
+            }
+            
+            document.getElementById('vndInput').value = formatNumberWithCommas(document.getElementById('vndInput').value.replace(/,/g, ''));
+        }
+
+        async function convertToVND() {
+            let usdAmount = parseFloat(document.getElementById('usdInput').value.replace(/,/g, ''));
+            let rates = await fetchExchangeRate();
+            
+            if (!isNaN(usdAmount) && usdAmount >= 0 && rates !== null && rates.VND) {
+                let vndAmount = usdAmount * rates.VND;
+                document.getElementById('vndOutput').textContent = `₫${formatNumberWithCommas(vndAmount.toFixed(0))}`;
+            } else {
+                document.getElementById('vndOutput').textContent = '₫0';
+            }
+            
+            document.getElementById('usdInput').value = formatNumberWithCommas(document.getElementById('usdInput').value.replace(/,/g, ''));
+        }
+    </script>
+</body>
+</html>
